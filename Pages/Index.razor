@@ -1,0 +1,81 @@
+﻿@using ChatGPTChatBot.Data
+@using Newtonsoft.Json;
+@using System.Text;
+@page "/"
+
+<PageTitle>Chatbot</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-4">
+        </div>
+        <div class="col-4">
+            <div class="messages">
+                <!-- <div class="question">aaaaa?</div>
+                <div class="response">bbbb!</div>-->
+                @for (int i = 0; i < messages.Count; i++){
+                    @if(i % 2 == 0)
+                    {
+                        <div class="question">@messages[i]</div>
+                    }else{
+                        <div class="response">@messages[i]</div>
+                    }
+                }
+                
+            </div>
+            <div class="textMessage">
+                <input @bind="message" />
+                <button @onclick="SendMessage">▶️</button>
+            </div>
+        </div>
+        <div class="col-4"></div>
+    </div>
+</div>
+
+@code {
+    public string message;
+    public string testing;
+    public List<string> messages = new List<string>();
+    private static HttpClient Http = new HttpClient();
+    const string BaseUrl = "https://api.openai.com/v1/completions";
+    const string apiKey = "SUA_API_KEY";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public async Task SendMessage()
+    {
+        Http = new HttpClient();
+        Http.BaseAddress = new Uri(BaseUrl);
+        messages.Add(message);
+
+        // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
+
+        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+        // Conteúdo JSON para a chamada        
+        var jsonContent = new
+        {
+            model = "gpt-3.5-turbo",
+            messages = new []
+            {
+                new {role = "user", content = $"{message}"}
+            },
+        };
+
+        var teste = JsonConvert.SerializeObject(jsonContent);
+
+        // Chama a API, passa o conteúdo JSON para ela
+        var responseContent = await Http.PostAsync("https://api.openai.com/v1/completions",jsonContent);
+
+        // Lê a resposta
+        var resContext = await responseContent.Content.ReadAsStringAsync();
+
+        // Desserializa o JSON da resposta
+        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+        messages.Add(data.choices[0].text.ToString());
+        StateHasChanged();
+    }
+}
