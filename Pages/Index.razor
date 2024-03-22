@@ -37,8 +37,8 @@
     public string testing;
     public List<string> messages = new List<string>();
     private static HttpClient Http = new HttpClient();
-    const string BaseUrl = "https://api.openai.com/v1/completions";
-    const string apiKey = "SUA_API_KEY";
+    const string BaseUrl = "https://api.openai.com/v1/chat/completions";
+    const string apiKey = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,26 +56,26 @@
         Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
         // Conteúdo JSON para a chamada        
-        var jsonContent = new
+        string jsonContent = JsonConvert.SerializeObject(new
         {
             model = "gpt-3.5-turbo",
             messages = new []
             {
                 new {role = "user", content = $"{message}"}
-            },
-        };
+        },
+        });
 
-        var teste = JsonConvert.SerializeObject(jsonContent);
+        var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-        // Chama a API, passa o conteúdo JSON para ela
-        var responseContent = await Http.PostAsync("https://api.openai.com/v1/completions",jsonContent);
+        // Faz o POST pra API, passando o JSON serializado
+        var response = await Http.PostAsync("", body);
 
-        // Lê a resposta
-        var resContext = await responseContent.Content.ReadAsStringAsync();
+        // Recebe a resposta
+        var resContext = await response.Content.ReadAsStringAsync();
 
         // Desserializa o JSON da resposta
         var data = JsonConvert.DeserializeObject<dynamic>(resContext);
-        messages.Add(data.choices[0].text.ToString());
+        messages.Add(data.choices[1].content.ToString());
         StateHasChanged();
     }
 }
