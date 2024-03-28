@@ -1,0 +1,88 @@
+﻿@using ChatGPTChatBot.Data
+@using Newtonsoft.Json;
+@using System.Text;
+@page "/"
+
+<PageTitle>Chatbot</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-3">
+        </div>
+        <div class="col-6">
+            <div class="messages">
+                <div class="question">
+                    The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
+                </div>
+                <div class="response">
+                    The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
+                </div>
+
+                <!--@for (int i = 0; i < messages.Count; i++){
+                    @if(i % 2 == 0)
+                    {
+                        <div class="question">@messages[i]</div>
+                    }else{
+                        <div class="response">@messages[i]</div>
+                    }
+                } -->
+                
+            </div>
+            <div class="textMessage">
+                <input type="text" @bind="message"/>
+                <button @onclick="SendMessage"><i class="bi bi-play-circle-fill"></i></button>
+            </div>
+        </div>
+        <div class="col-3"></div>
+    </div>
+</div>
+
+@code {
+    public string message;
+    public string testing;
+    public List<string> messages = new List<string>();
+    private static HttpClient Http = new HttpClient();
+    const string BaseUrl = "https://api.openai.com/v1/chat/completions";
+    const string apiKey = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    public async Task SendMessage()
+    {
+        Http = new HttpClient();
+        Http.BaseAddress = new Uri(BaseUrl);
+        messages.Add(message);
+
+        // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
+
+        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+        // Conteúdo JSON para a chamada        
+        string jsonContent = JsonConvert.SerializeObject(new
+        {
+            model = "gpt-3.5-turbo",
+            messages = new[]
+            {
+            new {role = "user", content = $"{message}"}
+        },
+        });
+
+        var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+        // Faz o POST pra API, passando o JSON serializado
+        var response = await Http.PostAsync("", body);
+
+        // Recebe a resposta
+        var resContext = await response.Content.ReadAsStringAsync();
+
+        // Desserializa o JSON da resposta
+        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+        string resposta = data.choices[0].message.content; //Passa a resposta para uma string
+        messages.Add(resposta); //Insere a resposta na tela
+
+        StateHasChanged();
+    }
+}
