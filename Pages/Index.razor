@@ -11,21 +11,21 @@
         </div>
         <div class="col-6">
             <div class="messages">
-                <div class="question">
+                <!-- <div class="question">
                     The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
                 </div>
                 <div class="response">
                     The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
-                </div>
+                </div> -->
 
-                <!--@for (int i = 0; i < messages.Count; i++){
+                @for (int i = 0; i < messages.Count; i++){
                     @if(i % 2 == 0)
                     {
                         <div class="question">@messages[i]</div>
                     }else{
                         <div class="response">@messages[i]</div>
                     }
-                } -->
+                }
                 
             </div>
             <div class="textMessage">
@@ -41,6 +41,7 @@
     public string message;
     public string testing;
     public List<string> messages = new List<string>();
+    public List<Message> mensagens = new List<Message>();
     private static HttpClient Http = new HttpClient();
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
     const string apiKey = "";
@@ -80,8 +81,17 @@
 
         // Desserializa o JSON da resposta
         var data = JsonConvert.DeserializeObject<dynamic>(resContext);
-        string resposta = data.choices[0].message.content; //Passa a resposta para uma string
-        messages.Add(resposta); //Insere a resposta na tela
+
+        Message mensagem = new Message();
+        {
+            mensagem.Id = data.id;
+            mensagem.Created = DateTime.Now;
+            mensagem.Content = data.choices[0].message.content;
+            mensagem.Total_tokens = data.usage.total_tokens;
+        }
+
+        messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
+        Console.WriteLine(mensagem.ToString());
 
         StateHasChanged();
     }

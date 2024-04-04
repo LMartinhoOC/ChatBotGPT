@@ -2,10 +2,17 @@
 {
     public class Message
     {
-        public string id { get; set; }
-        public string choices { get; set; }
-        public string content { get; set; }
-        public string usage {  get; set; }
-        public string total_tokens { get; set; }
-    }
+        public string Id { get; set; }
+        public string Content { get; set; }
+        public string Total_tokens { get; set; }
+        public DateTime Created { get; set; }
+
+        public override string ToString()
+        {
+           return $"MENSAGEM RECEBIDA - {Created}\n" +
+                  $"Id: {this.Id}\n" +
+                  $"Mensagem: {this.Content}\n" +
+                  $"Total de tokens gastos: {this.Total_tokens}\n";
+        }
+    }    
 }
