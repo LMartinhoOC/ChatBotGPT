@@ -4,7 +4,7 @@
     {
         public string Id { get; set; }
         public string Content { get; set; }
-        public string Total_tokens { get; set; }
+        public int Total_tokens { get; set; }
         public DateTime Created { get; set; }
 
         public override string ToString()

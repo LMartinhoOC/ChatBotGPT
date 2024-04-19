@@ -1,22 +1,60 @@
 ﻿@using ChatGPTChatBot.Data
+@using ChatGPTChatBot.Persistence
+@using ChatGPTChatBot.Persistence.Interface
 @using Newtonsoft.Json;
 @using System.Text;
+@inject IJSRuntime JSRuntime;
+@inject ILocalStorageService _localstorage;
+
 @page "/"
 
 <PageTitle>Chatbot</PageTitle>
 
 <div class="container">
     <div class="row">
-        <div class="col-3">
+        <div class="col-4 bg-light">
+            <h2>Projeto TCC - Unicarioca</h2>
+            <p>Este projeto se trata de um ChatBot que utiliza a API do ChatGPT (gpt-3.5-turbo). A ideia do projeto é a criação de um 'assistente'
+                para um atendimento médico. Um chat com uma inteligência artificial que pode fazer um <i>briefing</i> para auxiliar um profissional
+                de saúde a fazer um diagnostico e tratamento.
+            </p>
+            <hr class="my-4"/>
+            <p>
+                O uso da API é cobrado por requisição, para mais informações, acesse o <i>link</i>:
+                <a href="https://platform.openai.com/docs/api-reference">https://platform.openai.com/docs/api-reference</a>.</p>
+            <p>Caso possua uma API Key, insira-a no campo abaixo, para poder fazer as chamadas ao ChatBot:</p>
+
+            @if(apiKey == "")
+            {
+                <div class="input-group" id="AddKey">
+                    <input type="text" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
+                    <button class="btn btn-primary" @onclick="SetApikey">Confirmar</button>
+                </div>
+            }
+            else
+            {
+                <div class="input-group" id="ChangeKey">
+                    <input disabled type="password" id="ApiSecretKey" class="form-control" @bind="apiKey" aria-label="Digite sua API Secret Key">
+                    <button class="btn btn-primary" @onclick="ChangeApiKey">Alterar</button>
+                </div>
+            }
+            @if (isShow)
+            {
+                <div class="alert-danger px-2">
+                    <strong>Erro: </strong>@ErrorMessage
+                </div>
+            }
+            
+  
         </div>
-        <div class="col-6">
+        <div class="col-6 bg-light">
             <div class="messages">
-                <!-- <div class="question">
-                    The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
+                <div class="question">
+                    The quick brown fox jumps over the lazy dog The quick brown fox jumps over the lazy dog
                 </div>
                 <div class="response">
-                    The lazy fox jumped over the brown cat The lazy fox jumped over the brown cat
-                </div> -->
+                    The quick brown fox jumps over the lazy dog The quick brown fox jumps over the lazy dog
+                </div>
 
                 @for (int i = 0; i < messages.Count; i++){
                     @if(i % 2 == 0)
@@ -28,71 +66,115 @@
                 }
                 
             </div>
-            <div class="textMessage">
-                <input type="text" @bind="message"/>
-                <button @onclick="SendMessage"><i class="bi bi-play-circle-fill"></i></button>
+            <div class="input-group" @onkeydown="@Enter">
+                <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" autocomplete="off">
+                <button class="btn btn-primary" @onclick="SendMessage">Enviar</button>
             </div>
+        <div class="col-2"></div>
         </div>
-        <div class="col-3"></div>
     </div>
 </div>
 
 @code {
     public string message;
-    public string testing;
     public List<string> messages = new List<string>();
     public List<Message> mensagens = new List<Message>();
     private static HttpClient Http = new HttpClient();
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
-    const string apiKey = "";
+    private string apiKey = "";
+    public string ErrorMessage = "";
+    bool isShow { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-
     }
 
     public async Task SendMessage()
     {
-        Http = new HttpClient();
-        Http.BaseAddress = new Uri(BaseUrl);
-        messages.Add(message);
-
-        // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
-
-        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-        // Conteúdo JSON para a chamada        
-        string jsonContent = JsonConvert.SerializeObject(new
+        try
         {
-            model = "gpt-3.5-turbo",
-            messages = new[]
+            Http = new HttpClient();
+            Http.BaseAddress = new Uri(BaseUrl);
+            messages.Add(message);
+
+
+            // Seta a API KEY
+            Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+
+            // Conteúdo JSON para a chamada
+            string jsonContent = JsonConvert.SerializeObject(new
             {
-            new {role = "user", content = $"{message}"}
-        },
-        });
+                model = "gpt-3.5-turbo",
+                messages = new[]
+                {
+                new {role = "user", content = $"{message}"}
+                },
+            });
 
-        var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
 
-        // Faz o POST pra API, passando o JSON serializado
-        var response = await Http.PostAsync("", body);
+            var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-        // Recebe a resposta
-        var resContext = await response.Content.ReadAsStringAsync();
+            // Faz o POST pra API, passando o JSON serializado
+            var response = await Http.PostAsync("", body);
 
-        // Desserializa o JSON da resposta
-        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+            // Recebe a resposta
+            var resContext = await response.Content.ReadAsStringAsync();
 
-        Message mensagem = new Message();
+            // Desserializa o JSON da resposta
+            var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message mensagem = new Message();
+                {
+                    mensagem.Id = data.id;
+                    mensagem.Created = DateTime.Now;
+                    mensagem.Content = data.choices[0].message.content;
+                    mensagem.Total_tokens = data.usage.total_tokens;
+                }
+                messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
+                Console.WriteLine(mensagem.ToString());
+                ErrorMessage = "";
+                isShow = false;
+                StateHasChanged();
+                
+            }
+            else
+            {
+                isShow = true;
+                Console.WriteLine($"Erro da API: {data.error.message}");
+                ErrorMessage = data.error.message;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
         {
-            mensagem.Id = data.id;
-            mensagem.Created = DateTime.Now;
-            mensagem.Content = data.choices[0].message.content;
-            mensagem.Total_tokens = data.usage.total_tokens;
+            Console.WriteLine(e.Message);
         }
 
-        messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
-        Console.WriteLine(mensagem.ToString());
+    }
 
+    private async Task SetApikey()
+    {
+        apiKey = apiKey;
+    }
+
+    private async Task ChangeApiKey()
+    {
+        apiKey = "";
         StateHasChanged();
+    }
+
+    public void Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            if(message != null)
+            {
+                SendMessage();
+            }
+
+        }
     }
 }

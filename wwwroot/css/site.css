@@ -60,19 +60,20 @@ a, .btn-link {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
 
 .messages {
     height: 600px;
     border: 1px solid black;
     width: 100%;
-    background-color: #1E1E1E;
+    background-color: rgb(33 37 41);
     margin-bottom: 10px;
     display: flex;
     flex-direction: column;
-    overflow-y:scroll;
+    overflow-y: scroll;
+    flex: 0 0 auto;
 }
 
 .response {
@@ -91,33 +92,25 @@ a, .btn-link {
 .question {
     font-family: Arial, Helvetica, sans-serif;
     background-color: dodgerblue;
-    width:fit-content;
-    max-width:90%;
+    width: fit-content;
+    max-width: 90%;
     padding: 12px;
     margin: 5px 10px 5px 0;
     border-radius: 25px;
     color: white;
-    text-align:right;
     direction: ltr;
-    align-self:flex-end;
-    word-break:keep-all;
+    align-self: flex-end;
+    word-break: keep-all;
 }
 
-.textMessage input {
-    width: 100%;
-    margin-bottom: 10px;
-    border-radius: 10px;
-    border: 1px solid gray;
-    background-color: #2a3942;
-    color:white;
-    padding:0 8px
+::-webkit-scrollbar{
+    width: 8px;
 }
 
-.textMessage button {
-    margin-bottom: 10px;
-    font-size: 32pt;
-    color: darkgreen;
-    line-height: 0px;
-    border: none;
-    background-color: #fff;
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+::-webkit-scrollbar-track {
+    background: #353535;
 }
