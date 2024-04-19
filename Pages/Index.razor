@@ -29,7 +29,7 @@
                 <div class="input-group" id="AddKey">
                     <input type="text" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
                     <button class="btn btn-primary" @onclick="SetApikey">Confirmar</button>
-                </div>
+        </div>
             }
             else
             {
@@ -72,11 +72,13 @@
             </div>
         <div class="col-2"></div>
         </div>
+        <div class="col-3"></div>
     </div>
 </div>
 
 @code {
     public string message;
+    public string testing;
     public List<string> messages = new List<string>();
     public List<Message> mensagens = new List<Message>();
     private static HttpClient Http = new HttpClient();
@@ -87,54 +89,57 @@
 
     protected override async Task OnInitializedAsync()
     {
+
     }
 
     public async Task SendMessage()
     {
         try
         {
-            Http = new HttpClient();
-            Http.BaseAddress = new Uri(BaseUrl);
-            messages.Add(message);
+        Http = new HttpClient();
+        Http.BaseAddress = new Uri(BaseUrl);
+        messages.Add(message);
 
+        // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
 
             // Seta a API KEY
-            Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
-            // Conteúdo JSON para a chamada
-            string jsonContent = JsonConvert.SerializeObject(new
+        // Conteúdo JSON para a chamada        
+        string jsonContent = JsonConvert.SerializeObject(new
+        {
+            model = "gpt-3.5-turbo",
+            messages = new[]
             {
-                model = "gpt-3.5-turbo",
-                messages = new[]
-                {
-                new {role = "user", content = $"{message}"}
-                },
-            });
+            new {role = "user", content = $"{message}"}
+        },
+        });
 
             message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
 
-            var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+        var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-            // Faz o POST pra API, passando o JSON serializado
-            var response = await Http.PostAsync("", body);
+        // Faz o POST pra API, passando o JSON serializado
+        var response = await Http.PostAsync("", body);
 
-            // Recebe a resposta
-            var resContext = await response.Content.ReadAsStringAsync();
+        // Recebe a resposta
+        var resContext = await response.Content.ReadAsStringAsync();
 
-            // Desserializa o JSON da resposta
-            var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+        // Desserializa o JSON da resposta
+        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
 
             if (response.IsSuccessStatusCode)
             {
-                Message mensagem = new Message();
-                {
-                    mensagem.Id = data.id;
-                    mensagem.Created = DateTime.Now;
-                    mensagem.Content = data.choices[0].message.content;
-                    mensagem.Total_tokens = data.usage.total_tokens;
-                }
-                messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
-                Console.WriteLine(mensagem.ToString());
+        Message mensagem = new Message();
+        {
+            mensagem.Id = data.id;
+            mensagem.Created = DateTime.Now;
+            mensagem.Content = data.choices[0].message.content;
+            mensagem.Total_tokens = data.usage.total_tokens;
+        }
+
+        messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
+        Console.WriteLine(mensagem.ToString());
                 ErrorMessage = "";
                 isShow = false;
                 StateHasChanged();

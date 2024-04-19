@@ -60,9 +60,9 @@ a, .btn-link {
     color: white;
 }
 
-.blazor-error-boundary::after {
-    content: "An error has occurred."
-}
+    .blazor-error-boundary::after {
+        content: "An error has occurred."
+    }
 
 .messages {
     height: 600px;
@@ -98,6 +98,7 @@ a, .btn-link {
     margin: 5px 10px 5px 0;
     border-radius: 25px;
     color: white;
+    text-align:right;
     direction: ltr;
     align-self: flex-end;
     word-break: keep-all;
