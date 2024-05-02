@@ -29,7 +29,7 @@
                 <div class="input-group" id="AddKey">
                     <input type="text" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
                     <button class="btn btn-primary" @onclick="SetApikey">Confirmar</button>
-        </div>
+                </div>
             }
             else
             {
@@ -44,8 +44,6 @@
                     <strong>Erro: </strong>@ErrorMessage
                 </div>
             }
-            
-  
         </div>
         <div class="col-6 bg-light">
             <div class="messages">
@@ -56,12 +54,12 @@
                     The quick brown fox jumps over the lazy dog The quick brown fox jumps over the lazy dog
                 </div>
 
-                @for (int i = 0; i < messages.Count; i++){
-                    @if(i % 2 == 0)
+                @for (int i = 0; i < mensagens.Count; i++){
+                    @if (mensagens[i].Autor == null)
                     {
-                        <div class="question">@messages[i]</div>
+                        <div class="question">@mensagens[i].Content</div>
                     }else{
-                        <div class="response">@messages[i]</div>
+                        <div class="response">@mensagens[i].Content</div>
                     }
                 }
                 
@@ -78,8 +76,6 @@
 
 @code {
     public string message;
-    public string testing;
-    public List<string> messages = new List<string>();
     public List<Message> mensagens = new List<Message>();
     private static HttpClient Http = new HttpClient();
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
@@ -96,54 +92,63 @@
     {
         try
         {
-        Http = new HttpClient();
-        Http.BaseAddress = new Uri(BaseUrl);
-        messages.Add(message);
+            Http = new HttpClient();
+            Http.BaseAddress = new Uri(BaseUrl);
 
-        // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
+            Message mensagem = new Message();
+            {
+                mensagem.Id = "Cliente";
+                mensagem.Created = DateTime.Now;
+                mensagem.Content = message;
+                mensagem.Total_tokens = 0;
+                mensagem.Autor = null;
+            }
+
+            // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
 
             // Seta a API KEY
-        Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+            Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
-        // Conteúdo JSON para a chamada        
-        string jsonContent = JsonConvert.SerializeObject(new
-        {
-            model = "gpt-3.5-turbo",
-            messages = new[]
+            // Conteúdo JSON para a chamada        
+            string jsonContent = JsonConvert.SerializeObject(new
             {
-            new {role = "user", content = $"{message}"}
-        },
-        });
+                model = "gpt-3.5-turbo",
+                messages = new[]
+                {
+                new {role = "user", content = $"{message}"},
+                new {role = "system", content = $"Responda tudo como se fosse uma enfermeira"}
+                },
+            });
 
             message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
 
-        var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-        // Faz o POST pra API, passando o JSON serializado
-        var response = await Http.PostAsync("", body);
+            // Faz o POST pra API, passando o JSON serializado
+            var response = await Http.PostAsync("", body);
 
-        // Recebe a resposta
-        var resContext = await response.Content.ReadAsStringAsync();
+            // Recebe a resposta
+            var resContext = await response.Content.ReadAsStringAsync();
 
-        // Desserializa o JSON da resposta
-        var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+            // Desserializa o JSON da resposta
+            var data = JsonConvert.DeserializeObject<dynamic>(resContext);
 
             if (response.IsSuccessStatusCode)
             {
-        Message mensagem = new Message();
-        {
-            mensagem.Id = data.id;
-            mensagem.Created = DateTime.Now;
-            mensagem.Content = data.choices[0].message.content;
-            mensagem.Total_tokens = data.usage.total_tokens;
-        }
+                Message mensagemBot = new Message();
+                {
+                    mensagemBot.Id             = data.id;
+                    mensagemBot.Created        = DateTime.Now;
+                    mensagemBot.Content        = data.choices[0].message.content;
+                    mensagemBot.Total_tokens   = data.usage.total_tokens;
+                    mensagemBot.Autor          = "ChatBot";
+                }
 
-        messages.Add(mensagem.Content); //Insere a resposta na tela usando a string do objeto Mensagem
-        Console.WriteLine(mensagem.ToString());
+                mensagens.Add(mensagemBot); //Insere a resposta na tela usando a string do objeto Mensagem
+                Console.WriteLine(mensagemBot.ToString());
                 ErrorMessage = "";
                 isShow = false;
                 StateHasChanged();
-                
             }
             else
             {
@@ -163,6 +168,7 @@
     private async Task SetApikey()
     {
         apiKey = apiKey;
+        StateHasChanged();
     }
 
     private async Task ChangeApiKey()
