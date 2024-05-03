@@ -9,7 +9,6 @@
 @page "/"
 
 <PageTitle>Chatbot</PageTitle>
-
 <div class="container">
     <div class="row">
         <div class="col-4 bg-light">
@@ -24,10 +23,10 @@
                 <a href="https://platform.openai.com/docs/api-reference">https://platform.openai.com/docs/api-reference</a>.</p>
             <p>Caso possua uma API Key, insira-a no campo abaixo, para poder fazer as chamadas ao ChatBot:</p>
 
-            @if(apiKey == "")
+            @if(apiKey == null || apiKey == "")
             {
                 <div class="input-group" id="AddKey">
-                    <input type="text" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
+                    <input type="password" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
                     <button class="btn btn-primary" @onclick="SetApikey">Confirmar</button>
                 </div>
             }
@@ -35,7 +34,7 @@
             {
                 <div class="input-group" id="ChangeKey">
                     <input disabled type="password" id="ApiSecretKey" class="form-control" @bind="apiKey" aria-label="Digite sua API Secret Key">
-                    <button class="btn btn-primary" @onclick="ChangeApiKey">Alterar</button>
+                    <button class="btn btn-outline-primary" @onclick="ChangeApiKey">Alterar</button>
                 </div>
             }
             @if (isShow)
@@ -61,18 +60,17 @@
                     }else{
                         <div class="response">@mensagens[i].Content</div>
                     }
-                }
-                
+                }  
             </div>
-            <div class="input-group" @onkeydown="@Enter">
+            <div class="input-group">
                 <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" autocomplete="off">
-                <button class="btn btn-primary" @onclick="SendMessage">Enviar</button>
+                <button class="btn btn-primary" @onclick="SendMessage"><i class="bi bi-send"></i></button>
             </div>
-        <div class="col-2"></div>
         </div>
         <div class="col-3"></div>
     </div>
 </div>
+<script src="../wwwroot/lib/dist/js/bootstrap.js" ></script>
 
 @code {
     public string message;
@@ -92,8 +90,10 @@
     {
         try
         {
-            Http = new HttpClient();
-            Http.BaseAddress = new Uri(BaseUrl);
+            Assistant ChatBot = new Assistant();
+            {
+                ChatBot.bearer = apiKey;
+            }
 
             Message mensagem = new Message();
             {
@@ -104,59 +104,73 @@
                 mensagem.Autor = null;
             }
 
-            // Seta a API KEY de acordo com a necessidade. Você precisaria da sua própria API KEY
+            await ChatBot.EnviaMensagem(mensagem);
+
+
+
+            // Http = new HttpClient();
+            // Http.BaseAddress = new Uri(BaseUrl);
+
+            // Message mensagem = new Message();
+            // {
+            //     mensagem.Id = "Cliente";
+            //     mensagem.Created = DateTime.Now;
+            //     mensagem.Content = message;
+            //     mensagem.Total_tokens = 0;
+            //     mensagem.Autor = null;
+            // }
 
             // Seta a API KEY
-            Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+            //Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             // Conteúdo JSON para a chamada        
-            string jsonContent = JsonConvert.SerializeObject(new
-            {
-                model = "gpt-3.5-turbo",
-                messages = new[]
-                {
-                new {role = "user", content = $"{message}"},
-                new {role = "system", content = $"Responda tudo como se fosse uma enfermeira"}
-                },
-            });
+            // string jsonContent = JsonConvert.SerializeObject(new
+            // {
+            //     model = "gpt-3.5-turbo-0125",
+            //     messages = new[]
+            //     {
+            //     new {role = "user", content = $"{message}"},
+            //     new {role = "system", content = $"Responda tudo como se fosse uma enfermeira"}
+            //     },
+            // });
 
-            message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
+            // message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
 
-            var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+            // var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-            // Faz o POST pra API, passando o JSON serializado
-            var response = await Http.PostAsync("", body);
+            // // Faz o POST pra API, passando o JSON serializado
+            // var response = await Http.PostAsync("", body);
 
-            // Recebe a resposta
-            var resContext = await response.Content.ReadAsStringAsync();
+            // // Recebe a resposta
+            // var resContext = await response.Content.ReadAsStringAsync();
 
-            // Desserializa o JSON da resposta
-            var data = JsonConvert.DeserializeObject<dynamic>(resContext);
+            // // Desserializa o JSON da resposta
+            // var data = JsonConvert.DeserializeObject<dynamic>(resContext);
 
-            if (response.IsSuccessStatusCode)
-            {
-                Message mensagemBot = new Message();
-                {
-                    mensagemBot.Id             = data.id;
-                    mensagemBot.Created        = DateTime.Now;
-                    mensagemBot.Content        = data.choices[0].message.content;
-                    mensagemBot.Total_tokens   = data.usage.total_tokens;
-                    mensagemBot.Autor          = "ChatBot";
-                }
+            // if (response.IsSuccessStatusCode)
+            // {
+            //     Message mensagemBot = new Message();
+            //     {
+            //         mensagemBot.Id             = data.id;
+            //         mensagemBot.Created        = DateTime.Now;
+            //         mensagemBot.Content        = data.choices[0].message.content;
+            //         mensagemBot.Total_tokens   = data.usage.total_tokens;
+            //         mensagemBot.Autor          = "ChatBot";
+            //     }
 
-                mensagens.Add(mensagemBot); //Insere a resposta na tela usando a string do objeto Mensagem
-                Console.WriteLine(mensagemBot.ToString());
-                ErrorMessage = "";
-                isShow = false;
-                StateHasChanged();
-            }
-            else
-            {
-                isShow = true;
-                Console.WriteLine($"Erro da API: {data.error.message}");
-                ErrorMessage = data.error.message;
-                StateHasChanged();
-            }
+            //     mensagens.Add(mensagemBot); //Insere a resposta na tela usando a string do objeto Mensagem
+            //     Console.WriteLine(mensagemBot.ToString());
+            //     ErrorMessage = "";
+            //     isShow = false;
+            //     StateHasChanged();
+            // }
+            // else
+            // {
+            //     isShow = true;
+            //     Console.WriteLine($"Erro da API: {data.error.message}");
+            //     ErrorMessage = data.error.message;
+            //     await ChangeApiKey();
+            // }
         }
         catch(Exception e)
         {
@@ -173,19 +187,7 @@
 
     private async Task ChangeApiKey()
     {
-        apiKey = "";
+        apiKey = null;
         StateHasChanged();
-    }
-
-    public void Enter(KeyboardEventArgs e)
-    {
-        if (e.Code == "Enter" || e.Code == "NumpadEnter")
-        {
-            if(message != null)
-            {
-                SendMessage();
-            }
-
-        }
     }
 }
