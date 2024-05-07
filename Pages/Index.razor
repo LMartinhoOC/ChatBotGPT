@@ -11,9 +11,9 @@
 <PageTitle>Chatbot</PageTitle>
 <div class="container">
     <div class="row">
-        <div class="col-4 bg-light">
+        <div class="col-4">
             <h2>Projeto TCC - Unicarioca</h2>
-            <p>Este projeto se trata de um ChatBot que utiliza a API do ChatGPT (gpt-3.5-turbo). A ideia do projeto é a criação de um 'assistente'
+            <p>Este projeto se trata de um ChatBot que utiliza a API do ChatGPT (GPT-4 TURBO). A ideia do projeto é a criação de um 'assistente'
                 para um atendimento médico. Um chat com uma inteligência artificial que pode fazer um <i>briefing</i> para auxiliar um profissional
                 de saúde a fazer um diagnostico e tratamento.
             </p>
@@ -44,30 +44,63 @@
                 </div>
             }
         </div>
-        <div class="col-6 bg-light">
+        <div class="col-8">
             <div class="messages">
-                <div class="question">
-                    The quick brown fox jumps over the lazy dog The quick brown fox jumps over the lazy dog
-                </div>
-                <div class="response">
-                    The quick brown fox jumps over the lazy dog The quick brown fox jumps over the lazy dog
-                </div>
-
                 @for (int i = 0; i < mensagens.Count; i++){
-                    @if (mensagens[i].Autor == null)
+                    @if (mensagens[i].Autor != null)
                     {
-                        <div class="question">@mensagens[i].Content</div>
-                    }else{
                         <div class="response">@mensagens[i].Content</div>
+                    }else{
+                        <div class="question">@mensagens[i].Content</div>
                     }
                 }  
             </div>
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" autocomplete="off">
-                <button class="btn btn-primary" @onclick="SendMessage"><i class="bi bi-send"></i></button>
+                <button class="btn btn-primary" @onclick="CallStreamMessage"><i class="bi bi-send"></i></button>
             </div>
         </div>
-        <div class="col-3"></div>
+    </div>
+    <div class="row pt-5">
+        <div class="col-sm-4">
+            <div class="card">
+                @* <img class="card-img-top" src="https://media.licdn.com/dms/image/C4E03AQFxgrejbht1XA/profile-displayphoto-shrink_800_800/0/1601684195714?e=1720656000&v=beta&t=tpznt5ftGuNqqWNQi5EsoWCzWsi4-gUAz2mndfSlxks" /> *@
+                <div class="card-body">
+                    <h3 class="card-title">Luiz Martinho</h3>
+                    <h5 class="card-subtitle">Desenvolvimento / Pesquisa</h5>
+                    <p class="card-text pt-1">
+                        Ciência da computação<br />
+                        <a href="https://www.linkedin.com/in/luiz-martinho-64aa5218a/"><h2 class="bi bi-linkedin"></h2></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+               @*  <img class="card-img-top" src="https://media.licdn.com/dms/image/C4E03AQGVAXhKx1CKGw/profile-displayphoto-shrink_800_800/0/1654623133162?e=1720656000&v=beta&t=ybeT-ioRfRFPh96Rc3BaEtdaMCwksyUJ4QgvXvU21oM" /> *@
+                <div class="card-body">
+                    <h3 class="card-title">Leonardo Pereira</h3>
+                    <h5 class="card-subtitle">Organização / Pesquisa</h5>
+                    <p class="card-text pt-1">
+                        Ciência da computação<br />
+                        <a href="https://www.linkedin.com/in/leonardom-pereira/"><h2 class="bi bi-linkedin"></h2></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+                @* <img class="card-img-top" src="https://media.licdn.com/dms/image/C4E35AQHPBvXz8TSKWA/profile-framedphoto-shrink_800_800/0/1619728282475?e=1715475600&v=beta&t=F8YjJvMZxSCYnQZidKxnpZ3ztchbdlvQocWwzZ28mUo" /> *@
+                <div class="card-body">
+                    <h3 class="card-title">Christian Vazquez</h3>
+                    <h5 class="card-subtitle">Pesquisa / Pocumentação</h5>
+                    <p class="card-text pt-1">
+                        Análise de sistemas<br />
+                        <a href="https://www.linkedin.com/in/christianvazquez01/"><h2 class="bi bi-linkedin"></h2></a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script src="../wwwroot/lib/dist/js/bootstrap.js" ></script>
@@ -104,79 +137,50 @@
                 mensagem.Autor = null;
             }
 
-            await ChatBot.EnviaMensagem(mensagem);
+            var resposta = ChatBot.EnviaMensagem(mensagem);
 
-
-
-            // Http = new HttpClient();
-            // Http.BaseAddress = new Uri(BaseUrl);
-
-            // Message mensagem = new Message();
-            // {
-            //     mensagem.Id = "Cliente";
-            //     mensagem.Created = DateTime.Now;
-            //     mensagem.Content = message;
-            //     mensagem.Total_tokens = 0;
-            //     mensagem.Autor = null;
-            // }
-
-            // Seta a API KEY
-            //Http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-            // Conteúdo JSON para a chamada        
-            // string jsonContent = JsonConvert.SerializeObject(new
-            // {
-            //     model = "gpt-3.5-turbo-0125",
-            //     messages = new[]
-            //     {
-            //     new {role = "user", content = $"{message}"},
-            //     new {role = "system", content = $"Responda tudo como se fosse uma enfermeira"}
-            //     },
-            // });
-
-            // message = null; //Apaga o que foi preenchido no campo da mensagem após o envio
-
-            // var body = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
-
-            // // Faz o POST pra API, passando o JSON serializado
-            // var response = await Http.PostAsync("", body);
-
-            // // Recebe a resposta
-            // var resContext = await response.Content.ReadAsStringAsync();
-
-            // // Desserializa o JSON da resposta
-            // var data = JsonConvert.DeserializeObject<dynamic>(resContext);
-
-            // if (response.IsSuccessStatusCode)
-            // {
-            //     Message mensagemBot = new Message();
-            //     {
-            //         mensagemBot.Id             = data.id;
-            //         mensagemBot.Created        = DateTime.Now;
-            //         mensagemBot.Content        = data.choices[0].message.content;
-            //         mensagemBot.Total_tokens   = data.usage.total_tokens;
-            //         mensagemBot.Autor          = "ChatBot";
-            //     }
-
-            //     mensagens.Add(mensagemBot); //Insere a resposta na tela usando a string do objeto Mensagem
-            //     Console.WriteLine(mensagemBot.ToString());
-            //     ErrorMessage = "";
-            //     isShow = false;
-            //     StateHasChanged();
-            // }
-            // else
-            // {
-            //     isShow = true;
-            //     Console.WriteLine($"Erro da API: {data.error.message}");
-            //     ErrorMessage = data.error.message;
-            //     await ChangeApiKey();
-            // }
+            mensagens.Add(mensagem);
+            mensagens.Add(await resposta);
+            message = "";
+            StateHasChanged();
         }
         catch(Exception e)
         {
-            Console.WriteLine(e.Message);
+            mensagens.RemoveAt(mensagens.Count - 1);
+            ErrorMessage = e.Message;
+            isShow = true;
+            await ChangeApiKey();
         }
 
+    }
+
+    public async Task CallStreamMessage()
+    {
+        try
+        {
+            Assistant ChatBot = new Assistant();
+            {
+                ChatBot.bearer = apiKey;
+            }
+
+            Message mensagem = new Message();
+            {
+                mensagem.Id = "Cliente";
+                mensagem.Created = DateTime.Now;
+                mensagem.Content = message;
+                mensagem.Total_tokens = 0;
+                mensagem.Autor = null;
+            }
+
+            var resposta = await ChatBot.StreamMensagens(mensagem);
+        }
+        catch(Exception e)
+        {
+            mensagens.RemoveAt(mensagens.Count - 1);
+            ErrorMessage = e.Message;
+            isShow = true;
+            await ChangeApiKey();
+        }
     }
 
     private async Task SetApikey()
