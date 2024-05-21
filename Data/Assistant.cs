@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http.Headers;
-using Azure;
 using Microsoft.AspNetCore.Http.HttpResults;
 using OpenAI_API;
 using OpenAI_API.Chat;
@@ -11,7 +10,7 @@ namespace ChatGPTChatBot.Data
     public class Assistant
     {
         public string bearer { get; set; }
-        private string filepath = "../Treinamento/teste.json";
+        private string filepath = "Data/Treinamento/Dados.json";
 
         public async Task<Message> EnviaMensagem(Message mensagem, List<Message> contexto)
         {
@@ -34,9 +33,6 @@ namespace ChatGPTChatBot.Data
 
             //Passa instruções ao bot
             chat.RequestParameters.Temperature = 0;
-            chat.AppendSystemMessage("Você é um assistente médico que trabalha em um consultório médico. Sua missão é questionar o usuário e gerar um relatório breve sobre a condição dele. Como uma versão breve de um diagnóstico. Não diga ao usuário para procurar um médico, pois ele já está em um consultório.");
-            chat.AppendUserInput("Tenho tido tosse e espirros.");
-            chat.AppendExampleChatbotOutput("Parece ser um resfriado, talvez, no máximo uma gripe.");
 
             chat.AppendUserInput(mensagem.Content);
             var response = await chat.GetResponseFromChatbotAsync();
@@ -49,8 +45,12 @@ namespace ChatGPTChatBot.Data
                 resposta.Total_tokens = chat.MostRecentApiResult.Usage.TotalTokens;
                 resposta.Autor = null;
             }
-
             return resposta;
+        }
+
+        public async Task<Message> EnviaMensagemAzure(Message mensagem, List<Message> contexto)
+        {
+
         }
     }
 }

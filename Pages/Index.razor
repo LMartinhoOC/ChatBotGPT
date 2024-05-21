@@ -39,6 +39,9 @@
             }
             @if (isShow)
             {
+                <div class="invalid-feedback">
+                    Please enter a message in the textarea.
+                </div>
                 <div class="alert-danger px-2">
                     <strong>Erro: </strong>@ErrorMessage
                 </div>
@@ -55,9 +58,11 @@
                     }
                 }  
             </div>
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" autocomplete="off">
-                <button class="btn btn-primary" @onclick="SendMessage"><i class="bi bi-send"></i></button>
+            <div class="flex-grow-0">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" @onkeydown="@Enter" autocomplete="off">
+                    <button class="btn btn-primary" @onclick="SendMessage"><i class="bi bi-send"></i></button>
+                </div>           
             </div>
         </div>
     </div>
@@ -106,7 +111,7 @@
 <script src="../wwwroot/lib/dist/js/bootstrap.js" ></script>
 
 @code {
-    public string message;
+    public string message = "";
     public List<Message> mensagens = new List<Message>();
     private static HttpClient Http = new HttpClient();
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
@@ -116,7 +121,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-
+        
     }
 
     public async Task SendMessage()
@@ -140,8 +145,9 @@
             var resposta = ChatBot.EnviaMensagem(mensagem, mensagens);
 
             mensagens.Add(mensagem);
-            
+
             message = "";
+
             mensagens.Add(await resposta);
             StateHasChanged();
         }
@@ -152,7 +158,18 @@
             isShow = true;
             await ChangeApiKey();
         }
-       
+
+    }
+
+    public void Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            if(message != "")
+            {
+                SendMessage();
+            } 
+        }
     }
 
     private async Task SetApikey()
