@@ -1,4 +1,3 @@
-using Blazored.LocalStorage;
 using ChatGPTChatBot.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -9,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddBlazoredLocalStorage();
 
 //Injeção de dependências
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

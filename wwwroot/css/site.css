@@ -115,3 +115,9 @@ a, .btn-link {
 ::-webkit-scrollbar-track {
     background: #353535;
 }
+
+.diagnostico {
+    background-color: #3e3f42 !important;
+    color:white;
+    font-weight:bold;
+}

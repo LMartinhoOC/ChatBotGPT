@@ -1,0 +1,81 @@
+﻿using OpenAI_API;
+using OpenAI_API.Chat;
+using OpenAI_API.Models;
+using System;
+
+namespace ChatGPTChatBot.Data
+{
+    public class AssistantService
+    {
+        public string Bearer { get; set; }
+
+        public async Task<Message> EnviaMensagem(Message mensagem, List<Message> contexto)
+        {
+            OpenAIAPI api = new(Bearer);
+
+            var chat = api.Chat.CreateConversation();
+            chat.AppendSystemMessage("Você é um assistente médico que só sabe falar português brasileiro. Sua missão é conversar com um paciente e entender o que ele está sentindo. Ao longo da conversa com o paciente, indague sobre seus sintomas e históricos, tanto familiares quanto da ocorrência atual. Receba o paciente como tal assistente. Não diga que sente pena do paciente.");
+
+            foreach (var message in contexto)
+            {
+                if (message.Autor == null)
+                {
+                    chat.AppendSystemMessage(message.Content);
+                }
+                else
+                {
+                    chat.AppendUserInput(message.Content);
+                }
+            }
+            chat.Model = Model.ChatGPTTurbo; //define o modelo do ChatGPT            
+
+            //Passa instruções ao bot
+            chat.RequestParameters.Temperature = 0.8;
+
+            if (contexto.Count > 2) 
+            {
+                GeraDiagnostico(contexto);
+            }
+
+            chat.AppendUserInput(mensagem.Content);
+            var response = await chat.GetResponseFromChatbotAsync();
+
+            Message resposta = new();
+            {
+                resposta.Id = chat.MostRecentApiResult.Id;
+                resposta.Created = chat.MostRecentApiResult.Created.Value;
+                resposta.Content = response;
+                resposta.Total_tokens = chat.MostRecentApiResult.Usage.TotalTokens;
+                resposta.Autor = null;
+            }
+            return resposta;
+        }
+        public async Task<string> GeraDiagnostico(List<Message> contexto)
+        {
+            OpenAIAPI api = new(Bearer);
+            var chat = api.Chat.CreateConversation();
+            chat.AppendSystemMessage("Observe o conteúdo da conversa. Identifique os sintomas informados pelo paciente e liste-os junto com o palpite de uma doença relacionada. Dê a resposta mais curta o possível.");
+            chat.AppendUserInput("Estou sentindo dificuldade de respirar!");
+            chat.AppendExampleChatbotOutput("Sintomas: Dificuldade de respirar. Possível doença: Asma");
+
+            foreach (var message in contexto)
+            {
+                if (message.Autor == null)
+                {
+                    chat.AppendSystemMessage(message.Content);
+                }
+                else
+                {
+                    chat.AppendUserInput(message.Content);
+                }
+            }
+
+            await foreach (var res in chat.StreamResponseEnumerableFromChatbotAsync())
+            {
+                Console.Write(res);
+            }
+
+            return null;
+        }
+    }
+}

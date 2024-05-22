@@ -4,7 +4,6 @@
 @using Newtonsoft.Json;
 @using System.Text;
 @inject IJSRuntime JSRuntime;
-@inject ILocalStorageService _localstorage;
 
 @page "/"
 
@@ -39,9 +38,6 @@
             }
             @if (isShow)
             {
-                <div class="invalid-feedback">
-                    Please enter a message in the textarea.
-                </div>
                 <div class="alert-danger px-2">
                     <strong>Erro: </strong>@ErrorMessage
                 </div>
@@ -60,12 +56,19 @@
             </div>
             <div class="flex-grow-0">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind="message" @onkeydown="@Enter" autocomplete="off">
+                    <input type="text" class="form-control" placeholder="Digite uma mensagem" @bind-value="message" @bind-value:event="oninput" @onkeydown="@Enter" autocomplete="off">
                     <button class="btn btn-primary" @onclick="SendMessage"><i class="bi bi-send"></i></button>
-                </div>           
+                </div> 
             </div>
         </div>
     </div>
+</div>
+<div class="container">
+    <div class="flex-row d-flex pb-5 border-0 rounded m-4 bg-dark">
+        <div class="p-2 text-white"><b>Diagnóstico</b></div>
+    </div>
+</div>
+<div class="container">
     <div class="row pt-5">
         <div class="col-sm-4">
             <div class="card">
@@ -121,16 +124,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        
+
     }
 
     public async Task SendMessage()
     {
         try
         {
-            Assistant ChatBot = new Assistant();
+            AssistantService ChatBot = new AssistantService();
             {
-                ChatBot.bearer = apiKey;
+                ChatBot.Bearer = apiKey;
             }
 
             Message mensagem = new Message();
@@ -168,8 +171,13 @@
             if(message != "")
             {
                 SendMessage();
-            } 
+            }
         }
+    }
+
+    public void ConfirmaInput(KeyboardEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task SetApikey()
