@@ -17,17 +17,19 @@
                 de saúde a fazer um diagnostico e tratamento.
             </p>
             <hr class="my-4"/>
-            <p>
-                O uso da API é cobrado por requisição, para mais informações, acesse o <i>link</i>:
-                <a href="https://platform.openai.com/docs/api-reference">https://platform.openai.com/docs/api-reference</a>.</p>
-            <p>Caso possua uma API Key, insira-a no campo abaixo, para poder fazer as chamadas ao ChatBot:</p>
-
             @if(apiKey == null || apiKey == "")
             {
+            <div class="info rounded-2 p-2 border border-secondary">
+                <p>
+                    O uso da API é cobrado por requisição, para mais informações, acesse o <i>link</i>:
+                    <a href="https://platform.openai.com/docs/api-reference">https://platform.openai.com/docs/api-reference</a>.
+                </p>
+                <p>Caso possua uma API Key, insira-a no campo abaixo, para poder fazer as chamadas ao ChatBot:</p>
                 <div class="input-group" id="AddKey">
                     <input type="password" id="ApiSecretKey" autocomplete="false" name="hidden" class="form-control" placeholder="Digite sua API Secret Key" @bind="apiKey" aria-label="Digite sua API Secret Key">
                     <button class="btn btn-primary" @onclick="SetApikey">Confirmar</button>
                 </div>
+            </div>
             }
             else
             {
@@ -35,8 +37,15 @@
                     <input disabled type="password" id="ApiSecretKey" class="form-control" @bind="apiKey" aria-label="Digite sua API Secret Key">
                     <button class="btn btn-outline-primary" @onclick="ChangeApiKey">Alterar</button>
                 </div>
+                @if (resultado != null)
+                {
+                    <div class="flex-column d-flex pb-5 border-0 rounded my-4 bg-dark">
+                        <div class="p-2 text-white"><b>Diagnóstico prévio</b></div>
+                        <div class="px-2 text-white">@resultado</div>
+                    </div>
+                }
             }
-            @if (isShow)
+            @if (ErrorMessage != null)
             {
                 <div class="alert-danger px-2">
                     <strong>Erro: </strong>@ErrorMessage
@@ -62,16 +71,6 @@
             </div>
         </div>
     </div>
-</div>
-<div class="container">
-    @if (resultado != null)
-    {
-        <div class="flex-row d-flex pb-5 border-0 rounded m-4 bg-dark">
-            <div class="p-2 text-white"><b>Diagnóstico</b></div>
-            <div class="text-white">@resultado</div>
-        </div>
-    }
-   
 </div>
 <div class="container">
     <div class="row pt-5">
@@ -124,8 +123,7 @@
     public string resultado;
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
     private string apiKey = "";
-    public string ErrorMessage = "";
-    bool isShow { get; set; }
+    public string ErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,6 +134,7 @@
     {
         try
         {
+            ErrorMessage = null;
             AssistantService ChatBot = new AssistantService();
             {
                 ChatBot.Bearer = apiKey;
@@ -157,13 +156,11 @@
             message = "";
 
             mensagens.Add(await resposta);
-
             Message diagnostico = await ChatBot.GeraDiagnostico(mensagens);
-            resultado = diagnostico.Content;
 
-            if(mensagens.Count >= 2)
+            if(mensagens.Count > 2)
             {
-                
+                resultado = diagnostico.Content;
             }
             StateHasChanged();
         }
@@ -171,7 +168,6 @@
         {
             mensagens.RemoveAt(mensagens.Count - 1);
             ErrorMessage = e.Message;
-            isShow = true;
             await ChangeApiKey();
         }
 

@@ -34,11 +34,6 @@ namespace ChatGPTChatBot.Data
             //Passa instruções ao bot
             chat.RequestParameters.Temperature = 0.8;
 
-            if (contexto.Count > 2) 
-            {
-                GeraDiagnostico(contexto);
-            }
-
             chat.AppendUserInput(mensagem.Content);
             var response = await chat.GetResponseFromChatbotAsync();
 
@@ -52,13 +47,14 @@ namespace ChatGPTChatBot.Data
             }
             return resposta;
         }
+
         public async Task<Message> GeraDiagnostico(List<Message> contexto)
         {
             OpenAIAPI api = new(Bearer);
             var chat = api.Chat.CreateConversation();
-            chat.AppendSystemMessage("Observe o conteúdo da conversa. Identifique os sintomas informados pelo paciente e liste-os junto com o palpite de uma doença relacionada. Tente dar uma resposta curta.");
+            chat.AppendSystemMessage("Observe o conteúdo da conversa. Identifique os sintomas informados pelo paciente e liste-os junto com o palpite de uma doença relacionada. Tente dar uma resposta curta. Só responda se o assunto for relacionado à saúde do usuário. Não recomende-o a buscar ajuda profissional.");
             chat.AppendUserInput("Estou sentindo dificuldade de respirar!");
-            chat.AppendExampleChatbotOutput("Sintomas: Dificuldade de respirar. Possível doença: Asma");
+            chat.AppendExampleChatbotOutput("O paciente reporta estar sentindo falta de ar. Uma possibilidade seria uma crise de asma ou crise alergica.");
 
             foreach (var message in contexto)
             {
