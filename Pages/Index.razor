@@ -64,9 +64,14 @@
     </div>
 </div>
 <div class="container">
-    <div class="flex-row d-flex pb-5 border-0 rounded m-4 bg-dark">
-        <div class="p-2 text-white"><b>Diagnóstico</b></div>
-    </div>
+    @if (resultado != null)
+    {
+        <div class="flex-row d-flex pb-5 border-0 rounded m-4 bg-dark">
+            <div class="p-2 text-white"><b>Diagnóstico</b></div>
+            <div class="text-white">@resultado</div>
+        </div>
+    }
+   
 </div>
 <div class="container">
     <div class="row pt-5">
@@ -116,7 +121,7 @@
 @code {
     public string message = "";
     public List<Message> mensagens = new List<Message>();
-    private static HttpClient Http = new HttpClient();
+    public string resultado;
     const string BaseUrl = "https://api.openai.com/v1/chat/completions";
     private string apiKey = "";
     public string ErrorMessage = "";
@@ -152,6 +157,14 @@
             message = "";
 
             mensagens.Add(await resposta);
+
+            Message diagnostico = await ChatBot.GeraDiagnostico(mensagens);
+            resultado = diagnostico.Content;
+
+            if(mensagens.Count >= 2)
+            {
+                
+            }
             StateHasChanged();
         }
         catch(Exception e)

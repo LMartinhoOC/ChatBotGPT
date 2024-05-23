@@ -1,7 +1,9 @@
-﻿using OpenAI_API;
+﻿using Azure;
+using OpenAI_API;
 using OpenAI_API.Chat;
 using OpenAI_API.Models;
 using System;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ChatGPTChatBot.Data
 {
@@ -50,11 +52,11 @@ namespace ChatGPTChatBot.Data
             }
             return resposta;
         }
-        public async Task<string> GeraDiagnostico(List<Message> contexto)
+        public async Task<Message> GeraDiagnostico(List<Message> contexto)
         {
             OpenAIAPI api = new(Bearer);
             var chat = api.Chat.CreateConversation();
-            chat.AppendSystemMessage("Observe o conteúdo da conversa. Identifique os sintomas informados pelo paciente e liste-os junto com o palpite de uma doença relacionada. Dê a resposta mais curta o possível.");
+            chat.AppendSystemMessage("Observe o conteúdo da conversa. Identifique os sintomas informados pelo paciente e liste-os junto com o palpite de uma doença relacionada. Tente dar uma resposta curta.");
             chat.AppendUserInput("Estou sentindo dificuldade de respirar!");
             chat.AppendExampleChatbotOutput("Sintomas: Dificuldade de respirar. Possível doença: Asma");
 
@@ -70,12 +72,18 @@ namespace ChatGPTChatBot.Data
                 }
             }
 
-            await foreach (var res in chat.StreamResponseEnumerableFromChatbotAsync())
-            {
-                Console.Write(res);
-            }
+            var response = await chat.GetResponseFromChatbotAsync();
 
-            return null;
+            Message diagnostico = new Message();
+            {
+                diagnostico.Id = chat.MostRecentApiResult.Id;
+                diagnostico.Created = chat.MostRecentApiResult.Created.Value;
+                diagnostico.Content = response;
+                diagnostico.Total_tokens = chat.MostRecentApiResult.Usage.TotalTokens;
+                diagnostico.Autor = null;
+            }           
+
+            return diagnostico;
         }
     }
 }
